@@ -58,7 +58,6 @@ xs = deque(np.zeros(3), maxlen=3)
 ys = deque(np.zeros(2), maxlen=2)
 
 line,line2 = ax.plot(time_serie, ecg_raw, "r",  time_serie, ecg_notch, "b")
-print(type(line))
 
 # Setting labels for the plot
 plt.xlabel("Time (ms)")
