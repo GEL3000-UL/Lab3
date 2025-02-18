@@ -45,19 +45,14 @@ void loop() {
   if(is_buffer_ready_flag){
     sprintf(tmp, "%i,%i", HANDSHAKE_START, HANDSHAKE_START);
     Serial.println(tmp);
-    //Serial.println(HANDSHAKE_START);
 
     for(int i=0; i<BUFFER_LENGTH; i++){
       sprintf(tmp, "%i,%i", buffer.time[i], buffer.data[i]);
       Serial.println( tmp );
-
-      //Serial.println(buffer.time[i]);
-      //Serial.println(buffer.data[i]);
     }
 
     sprintf(tmp, "%i,%i", HANDSHAKE_STOP, HANDSHAKE_STOP);
     Serial.println(tmp);
-    //Serial.println(HANDSHAKE_STOP);
 
     is_buffer_ready_flag = false;
   }

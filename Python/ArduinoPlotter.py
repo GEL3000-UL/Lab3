@@ -1,7 +1,7 @@
 ####################################################################################################
 
 # User-modifiable variables
-PORT = 'COM5'
+PORT = 'COM6'
 BATCH_LENGTH = 200 # Number of elements per bulk transfer
 PLOT_LENGTH = 10*BATCH_LENGTH # Number of values to display at once
 DIR_PATH = r"./Recordings" # Where the csv files will be written
@@ -43,7 +43,7 @@ class ArduinoPlotter:
 
         # liste de sauvegarde des datas
         # permet de contenir les PLOT_LENGTH dernieres data recues
-        self.time = deque(np.arange(0, PLOT_LENGTH, 1), maxlen=PLOT_LENGTH)
+        self.time = deque(np.arange(-PLOT_LENGTH, 0, 1), maxlen=PLOT_LENGTH)
         self.data = deque(np.zeros(PLOT_LENGTH), maxlen=PLOT_LENGTH)
 
         return
@@ -217,10 +217,9 @@ class ArduinoPlotter:
 
                 # lire buffer jusqu'au caracter '\n'
                 # ne rien faire en cas d'erreur de la lecture
-                handshake = self.readSerialLine()
-                if handshake is None:
+                handshake = list(self.readSerialLine())
+                if handshake == []: 
                     continue
-                handshake = tuple(handshake)
 
                 # attendre debut d'un buffer
                 if handshake[0] != ArduinoPlotter.HANDSHAKE_START:
@@ -230,8 +229,8 @@ class ArduinoPlotter:
                 while safety_net > 0:
 
                     # lire buffer jusqu'au caracter '\n'
-                    rcvd = self.readSerialLine()
-                    if rcvd is None:
+                    rcvd = list(self.readSerialLine())
+                    if rcvd == []:
                         continue
                     time, data = rcvd
                     
