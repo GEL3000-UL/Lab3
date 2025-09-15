@@ -4,6 +4,8 @@
 #define HANDSHAKE_START 0x7fff
 #define HANDSHAKE_STOP 0x7ffe
 #define MAX_TIME 10000
+#define FS 3e3
+
 
 struct Buffer{
   int time[BUFFER_LENGTH] = {0};
@@ -18,51 +20,54 @@ unsigned long time = 0;
 
 void setup() {
   pinMode(SAMPLING_PIN, INPUT);
-  pinMode(LED_BUILTIN, OUTPUT);
-  Serial.begin( 115200 );
+  Serial.begin( 921600 );
+  pinMode(LED_BUILTIN, OUTPUT);  
 
   cli();  // desactivation des interruptions
 
-  // reinitialiser registre TCCR1A, TCCR1B et TCNT a 1
-  TCCR1A = 0; 
-  TCCR1B = 0; 
-  TCNT1 = 0;   
+  // reinitialiser registre TCCR0A, TCCR0B et TCNT a 0
+  TCCR0A = 0; 
+  TCCR0B = 0; 
+  TCNT0 = 0;   
 
-  TCCR1A = 0;   // timer en mode CTC (compter de 0 a la valeur contenue dans OCR1A)
-  TCCR1B |= (1 << WGM12) | (1 << CS10);    // Set CS10 bit for prescaler = 1
-  TIMSK1 |= (1 << OCIE1A);  // Enable timer compare interrupt
+  TCCR0A |= (1 << WGM01);               // timer en mode CTC (compter de 0 a la valeur contenue dans OCROA)
+  TCCR0B |= (1 << CS01) | (1 << CS00);  // Set CS01 and CS00 bits for 64 prescaler
+  TIMSK0 |= (1 << OCIE0A);              // Enable timer compare interrupt
 
   /* setter registre de comparaison pour interruption a 
-   * toutes les 1ms => f = 1kHz
-   * OCR1A = [ 16MHz / (1+1)(1kHz) ] = 8 000
+   * toutes les 0.333ms => f = 3kHz
+   * OCR0A = [ 16MHz / (64+1)(3kHz) ] -1 = 81
    */ 
-  OCR1A = 8000;
+  OCR0A = (16e6 / (65*FS)) - 1;
 
   sei();  // activation des interruptions
 }
 
 void loop() {
+
+
+
   static char tmp[32];
   if(is_buffer_ready_flag){
-    sprintf(tmp, "%i,%i", HANDSHAKE_START, HANDSHAKE_START);
+    //sprintf(tmp, "%i,%i", HANDSHAKE_START, HANDSHAKE_START);
     //Serial.println(tmp);
 
     for(int i=0; i<BUFFER_LENGTH; i++){
-      sprintf(tmp, "%i,%i", buffer.time[i], buffer.data[i]);
+      //sprintf(tmp, "%i,%i", buffer.time[i], buffer.data[i]);
+      sprintf(tmp, "%i", buffer.data[i]);
       Serial.println( tmp );
     }
 
-    sprintf(tmp, "%i,%i", HANDSHAKE_STOP, HANDSHAKE_STOP);
+    //sprintf(tmp, "%i,%i", HANDSHAKE_STOP, HANDSHAKE_STOP);
     //Serial.println(tmp);
 
     is_buffer_ready_flag = false;
   }
 }
 
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
   static int sample_idx = 0;
-
   digitalWrite(LED_BUILTIN, sample_idx%2);
 
   buffer.time[sample_idx] = time + sample_idx;
@@ -78,7 +83,4 @@ ISR(TIMER1_COMPA_vect)
       time = 0;
     }
   }
-
-  delay(1);
 }
-
